@@ -1,0 +1,22 @@
+{
+  "manifest_version": 2,
+  "name": "Open Google in Chrome",
+  "description": "Intercepts navigations to *.google.com and opens them in Google Chrome instead.",
+  "version": "1.0.0",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "chrome-redirector@meltzg",
+      "strict_min_version": "102.0"
+    }
+  },
+  "permissions": [
+    "webRequest",
+    "webRequestBlocking",
+    "nativeMessaging",
+    "tabs",
+    "*://*.google.com/*"
+  ],
+  "background": {
+    "scripts": ["background.js"]
+  }
+}

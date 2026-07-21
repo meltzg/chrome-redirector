@@ -1,0 +1,5 @@
+# unsigned build artifacts (signed .xpi files ARE committed)
+dist/*.zip
+web-ext-artifacts/
+node_modules/
+__pycache__/
