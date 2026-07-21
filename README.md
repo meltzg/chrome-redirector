@@ -5,7 +5,9 @@ instead of Firefox.
 
 ## Install
 
-Requirements: Linux, Firefox, Google Chrome (or Chromium), `python3`.
+Requirements: Firefox, Google Chrome (or Chromium), Python 3.
+
+**Linux / macOS:**
 
 ```sh
 git clone https://github.com/meltzg/chrome-redirector.git ~/chrome-redirector
@@ -13,16 +15,30 @@ cd ~/chrome-redirector
 ./install.sh
 ```
 
+**Windows (PowerShell):**
+
+```powershell
+git clone https://github.com/meltzg/chrome-redirector.git $HOME\chrome-redirector
+cd $HOME\chrome-redirector
+powershell -ExecutionPolicy Bypass -File install.ps1
+```
+
 Then click **Add** in the Firefox prompt. That's it — google.com links now
 open in Chrome.
 
 > Keep the clone around: the native helper runs from inside it. To update,
-> `git pull` and re-run `./install.sh`.
+> `git pull` and re-run the installer.
+>
+> Nothing runs at login or in the background — Firefox launches the helper
+> on demand when a google.com link is opened, and it exits immediately after.
 
 ## Uninstall
 
 - Remove the extension in Firefox (`about:addons`).
-- `rm ~/.mozilla/native-messaging-hosts/com.meltzg.chrome_redirector.json`
+- Remove the native host registration:
+  - Linux: `rm ~/.mozilla/native-messaging-hosts/com.meltzg.chrome_redirector.json`
+  - macOS: `rm ~/Library/Application\ Support/Mozilla/NativeMessagingHosts/com.meltzg.chrome_redirector.json`
+  - Windows: `Remove-Item HKCU:\Software\Mozilla\NativeMessagingHosts\com.meltzg.chrome_redirector`
 
 ## How it works
 

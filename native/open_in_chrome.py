@@ -1,20 +1,50 @@
 #!/usr/bin/env python3
 """Native messaging host: receives a URL from the Firefox extension and
-opens it in Google Chrome."""
+opens it in Google Chrome. Launched on demand by Firefox — not a daemon."""
 
 import json
+import os
+import platform
 import shutil
 import struct
 import subprocess
 import sys
 from urllib.parse import urlparse
 
-CHROME = (
-    shutil.which("google-chrome")
-    or shutil.which("google-chrome-stable")
-    or shutil.which("chromium")
-    or shutil.which("chromium-browser")
-)
+
+def find_chrome():
+    system = platform.system()
+    if system == "Darwin":
+        candidates = [
+            "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+            os.path.expanduser(
+                "~/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+            ),
+        ]
+        for path in candidates:
+            if os.path.exists(path):
+                return path
+    elif system == "Windows":
+        for base in (
+            os.environ.get("PROGRAMFILES"),
+            os.environ.get("PROGRAMFILES(X86)"),
+            os.environ.get("LOCALAPPDATA"),
+        ):
+            if base:
+                path = os.path.join(
+                    base, "Google", "Chrome", "Application", "chrome.exe"
+                )
+                if os.path.exists(path):
+                    return path
+    for name in ("google-chrome", "google-chrome-stable", "chromium",
+                 "chromium-browser", "chrome"):
+        path = shutil.which(name)
+        if path:
+            return path
+    return None
+
+
+CHROME = find_chrome()
 
 
 def read_message():
@@ -40,6 +70,17 @@ def url_is_allowed(url):
     return host == "google.com" or host.endswith(".google.com")
 
 
+def launch_detached(args):
+    kwargs = {"stdout": subprocess.DEVNULL, "stderr": subprocess.DEVNULL}
+    if platform.system() == "Windows":
+        kwargs["creationflags"] = (
+            subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP
+        )
+    else:
+        kwargs["start_new_session"] = True
+    subprocess.Popen(args, **kwargs)
+
+
 def main():
     while True:
         message = read_message()
@@ -48,18 +89,13 @@ def main():
 
         url = message.get("url", "")
         if not CHROME:
-            send_message({"ok": False, "error": "chrome not found in PATH"})
+            send_message({"ok": False, "error": "chrome not found"})
             continue
         if not url_is_allowed(url):
             send_message({"ok": False, "error": "url not allowed"})
             continue
 
-        subprocess.Popen(
-            [CHROME, url],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            start_new_session=True,
-        )
+        launch_detached([CHROME, url])
         send_message({"ok": True})
 
 
