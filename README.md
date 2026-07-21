@@ -86,4 +86,6 @@ is deleted.
 
 For local testing, `build.sh` produces an unsigned zip in `dist/` (loadable
 via `about:debugging`), and `sign.sh` can be run by hand with the AMO
-credentials in the environment.
+credentials in the environment. To install a locally signed `.xpi` from
+`dist/` instead of the latest release, run `./install.sh --local`
+(Windows: `.\install.ps1 -Local`).

@@ -7,6 +7,8 @@
 #
 # Run from PowerShell:  .\install.ps1
 # (If scripts are blocked:  powershell -ExecutionPolicy Bypass -File install.ps1)
+# Pass -Local to prefer a locally built .xpi in dist/ over the latest release.
+param([switch]$Local)
 $ErrorActionPreference = "Stop"
 
 $Dir = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -56,11 +58,11 @@ Set-ItemProperty -Path $Key -Name "(Default)" -Value $Manifest
 Write-Host "✓ Native host registered: $Key"
 Write-Host "  (points at $Bat — don't move or delete this clone)"
 
-# 4. Extension: use a local signed .xpi if present, otherwise download the
-# latest GitHub release
-$Xpi = Get-ChildItem -Path (Join-Path $Dir "dist") -Filter *.xpi -ErrorAction SilentlyContinue |
-    Sort-Object Name | Select-Object -Last 1
-if (-not $Xpi) {
+# 4. Extension: download the latest GitHub release so re-running the
+# installer always updates. A local .xpi in dist/ is only a fallback —
+# pass -Local to prefer it (e.g. to test a locally signed build).
+$Xpi = $null
+if (-not $Local) {
     try {
         Write-Host "Fetching latest release from GitHub..."
         $Release = Invoke-RestMethod "https://api.github.com/repos/meltzg/chrome-redirector/releases/latest"
@@ -75,6 +77,11 @@ if (-not $Xpi) {
     } catch {
         Write-Warning "Could not download a release: $_"
     }
+}
+if (-not $Xpi) {
+    $Xpi = Get-ChildItem -Path (Join-Path $Dir "dist") -Filter *.xpi -ErrorAction SilentlyContinue |
+        Sort-Object Name | Select-Object -Last 1
+    if ($Xpi) { Write-Host "Using local .xpi: $($Xpi.FullName)" }
 }
 if ($Xpi) {
     $Firefox = @(

@@ -54,10 +54,11 @@ EOF
 echo "✓ Native host registered: $MANIFEST"
 echo "  (points at $HOST_SCRIPT — don't move or delete this clone)"
 
-# 2. Extension: use a local signed .xpi if present, otherwise download the
-# latest GitHub release
-XPI="$(ls -1 "$DIR"/dist/*.xpi 2>/dev/null | sort -V | tail -n1 || true)"
-if [ -z "$XPI" ] && command -v curl >/dev/null; then
+# 2. Extension: download the latest GitHub release so re-running the
+# installer always updates. A local .xpi in dist/ is only a fallback —
+# pass --local to prefer it (e.g. to test a locally signed build).
+XPI=""
+if [ "${1:-}" != "--local" ] && command -v curl >/dev/null; then
   echo "Fetching latest release from GitHub…"
   URL="$(curl -fsSL https://api.github.com/repos/meltzg/chrome-redirector/releases/latest 2>/dev/null \
     | python3 -c "import json,sys; assets=json.load(sys.stdin).get('assets',[]); print(next((a['browser_download_url'] for a in assets if a['name'].endswith('.xpi')), ''))" \
@@ -67,6 +68,10 @@ if [ -z "$XPI" ] && command -v curl >/dev/null; then
     XPI="$DIR/dist/$(basename "$URL")"
     curl -fsSL -o "$XPI" "$URL" || XPI=""
   fi
+fi
+if [ -z "$XPI" ]; then
+  XPI="$(ls -1 "$DIR"/dist/*.xpi 2>/dev/null | sort -V | tail -n1 || true)"
+  [ -n "$XPI" ] && echo "Using local .xpi: $XPI"
 fi
 if [ -n "$XPI" ]; then
   echo "✓ Opening signed extension in Firefox: $XPI"
