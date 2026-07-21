@@ -8,7 +8,7 @@ instead of Firefox.
 Requirements: Linux, Firefox, Google Chrome (or Chromium), `python3`.
 
 ```sh
-git clone <REPO_URL> ~/chrome-redirector
+git clone https://github.com/meltzg/chrome-redirector.git ~/chrome-redirector
 cd ~/chrome-redirector
 ./install.sh
 ```
