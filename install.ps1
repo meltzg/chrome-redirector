@@ -56,9 +56,26 @@ Set-ItemProperty -Path $Key -Name "(Default)" -Value $Manifest
 Write-Host "✓ Native host registered: $Key"
 Write-Host "  (points at $Bat — don't move or delete this clone)"
 
-# 4. Extension
+# 4. Extension: use a local signed .xpi if present, otherwise download the
+# latest GitHub release
 $Xpi = Get-ChildItem -Path (Join-Path $Dir "dist") -Filter *.xpi -ErrorAction SilentlyContinue |
     Sort-Object Name | Select-Object -Last 1
+if (-not $Xpi) {
+    try {
+        Write-Host "Fetching latest release from GitHub..."
+        $Release = Invoke-RestMethod "https://api.github.com/repos/meltzg/chrome-redirector/releases/latest"
+        $Asset = $Release.assets | Where-Object { $_.name -like "*.xpi" } | Select-Object -First 1
+        if ($Asset) {
+            $DistDir = Join-Path $Dir "dist"
+            New-Item -ItemType Directory -Force -Path $DistDir | Out-Null
+            $XpiPath = Join-Path $DistDir $Asset.name
+            Invoke-WebRequest $Asset.browser_download_url -OutFile $XpiPath
+            $Xpi = Get-Item $XpiPath
+        }
+    } catch {
+        Write-Warning "Could not download a release: $_"
+    }
+}
 if ($Xpi) {
     $Firefox = @(
         "$env:ProgramFiles\Mozilla Firefox\firefox.exe",

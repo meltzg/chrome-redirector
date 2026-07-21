@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# One-time maintainer step: signs the extension via addons.mozilla.org so
-# release Firefox will install it. The signed .xpi lands in dist/ — commit it
-# so users get it with `git clone`.
+# Signs the extension via addons.mozilla.org so release Firefox will install
+# it. The signed .xpi lands in dist/. Normally run by CI on a version tag
+# (.github/workflows/release.yml); run manually only for local testing.
 #
 # Get API credentials at: https://addons.mozilla.org/developers/addon/api/key/
 # then run:  AMO_JWT_ISSUER=user:xxx:yyy AMO_JWT_SECRET=zzz ./sign.sh
@@ -20,5 +20,5 @@ npx --yes web-ext sign \
   --api-secret "$AMO_JWT_SECRET"
 
 echo
-echo "Signed .xpi written to dist/ — commit it so users get it via git clone:"
+echo "Signed .xpi written to dist/:"
 ls -1 "$DIR"/dist/*.xpi

@@ -61,20 +61,26 @@ OAuth iframes) are untouched.
 
 ## Maintainer: releasing a new version
 
-Release Firefox only installs extensions signed by Mozilla. Signing is free
-and automated (unlisted channel — the add-on is signed but not published on
-addons.mozilla.org):
+Releases are automated: pushing a `vX.Y.Z` tag triggers
+`.github/workflows/release.yml`, which signs the extension via
+addons.mozilla.org (unlisted channel — signed but not published on AMO) and
+publishes a GitHub Release with the signed `.xpi`. The install scripts pick
+up the latest release automatically.
 
-1. Get API credentials at
-   <https://addons.mozilla.org/developers/addon/api/key/>
-2. Bump `"version"` in `extension/manifest.json`.
-3. Sign and commit the result:
+One-time setup: create AMO API credentials at
+<https://addons.mozilla.org/developers/addon/api/key/> and add them as repo
+secrets named `AMO_JWT_ISSUER` and `AMO_JWT_SECRET`.
 
-   ```sh
-   AMO_JWT_ISSUER=user:xxx:yyy AMO_JWT_SECRET=zzz ./sign.sh
-   git add dist/*.xpi extension/manifest.json
-   git commit -m "Release vX.Y.Z"
-   ```
+To release:
 
-`build.sh` produces an unsigned zip in `dist/` if you just want to inspect
-the package or load it temporarily via `about:debugging`.
+```sh
+# bump "version" in extension/manifest.json to X.Y.Z, commit, then:
+git tag vX.Y.Z
+git push origin main vX.Y.Z
+```
+
+The workflow fails fast if the tag doesn't match the manifest version.
+
+For local testing, `build.sh` produces an unsigned zip in `dist/` (loadable
+via `about:debugging`), and `sign.sh` can be run by hand with the AMO
+credentials in the environment.
