@@ -74,12 +74,15 @@ secrets named `AMO_JWT_ISSUER` and `AMO_JWT_SECRET`.
 To release:
 
 ```sh
-# bump "version" in extension/manifest.json to X.Y.Z, commit, then:
 git tag vX.Y.Z
-git push origin main vX.Y.Z
+git push origin vX.Y.Z
 ```
 
-The workflow fails fast if the tag doesn't match the manifest version.
+The workflow stamps the tag's version into `extension/manifest.json` at
+build time, so the version committed in git is just a dev placeholder —
+no version-bump commit needed. Versions must be new to AMO: pick a higher
+version for each release, and don't reuse a tag's version even if the tag
+is deleted.
 
 For local testing, `build.sh` produces an unsigned zip in `dist/` (loadable
 via `about:debugging`), and `sign.sh` can be run by hand with the AMO

@@ -18,15 +18,16 @@ jobs:
         with:
           node-version: 22
 
-      - name: Check tag matches manifest version
+      - name: Set manifest version from tag
         run: |
-          TAG_VERSION="${GITHUB_REF_NAME#v}"
-          MANIFEST_VERSION="$(python3 -c "import json; print(json.load(open('extension/manifest.json'))['version'])")"
-          if [ "$TAG_VERSION" != "$MANIFEST_VERSION" ]; then
-            echo "Tag $GITHUB_REF_NAME does not match manifest version $MANIFEST_VERSION" >&2
-            echo "Bump \"version\" in extension/manifest.json before tagging." >&2
-            exit 1
-          fi
+          VERSION="${GITHUB_REF_NAME#v}" python3 -c "
+          import json, os
+          path = 'extension/manifest.json'
+          manifest = json.load(open(path))
+          manifest['version'] = os.environ['VERSION']
+          json.dump(manifest, open(path, 'w'), indent=2)
+          print('manifest version set to', manifest['version'])
+          "
 
       - name: Sign extension via addons.mozilla.org
         env:
