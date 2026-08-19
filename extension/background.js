@@ -1,7 +1,26 @@
 const NATIVE_HOST = "com.meltzg.chrome_redirector";
 
+// Hosts that must stay in Firefox: OAuth / "Sign in with Google" flows
+// break if the navigation is hijacked mid-login.
+const PASSTHROUGH_HOSTS = ["accounts.google.com"];
+
+function isPassthrough(url) {
+  try {
+    const { hostname } = new URL(url);
+    return PASSTHROUGH_HOSTS.some(
+      (host) => hostname === host || hostname.endsWith("." + host)
+    );
+  } catch {
+    return false;
+  }
+}
+
 browser.webRequest.onBeforeRequest.addListener(
   (details) => {
+    if (isPassthrough(details.url)) {
+      return {};
+    }
+
     browser.runtime
       .sendNativeMessage(NATIVE_HOST, { url: details.url })
       .catch((err) => {
